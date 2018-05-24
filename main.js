@@ -74,8 +74,7 @@ function getLoginToken() {
             password: adapter.config.password,
             client_secret: '4HJGRffVR8xb3XdEUQpjgZ1VplJi6Xgw' },
         headers:
-        { 'Postman-Token': 'b57437e9-595f-405e-aac6-e35c0bfc3a95',
-            'Cache-Control': 'no-cache' } };
+        { 'Cache-Control': 'no-cache' } };
 
     request(options, function (error, response, body) {
         if (error) throw new Error(error);
@@ -92,8 +91,39 @@ function getLoginToken() {
             adapter.setState('api.refresh_token', refresh_token, function (err) {
                 if (err) adapter.log.error(err);
             });
+        }
+    });
+}
 
-            getHomeID();
+function refreshToken() {
+    var request = require("request");
+
+    var options = { method: 'POST',
+        url: 'https://my.tado.com/oauth/token',
+        qs:
+        { client_id: 'public-api-preview',
+            grant_type: 'refresh_token',
+            scope: 'home.user',
+            refresh_token: refresh_token,
+            client_secret: '4HJGRffVR8xb3XdEUQpjgZ1VplJi6Xgw' },
+        headers:
+        { 'Cache-Control': 'no-cache' } };
+
+    request(options, function (error, response, body) {
+        if (error) throw new Error(error);
+
+        var json = JSON.parse(body);
+        access_token = json['access_token'];
+        refresh_token = json['refresh_token'];
+
+        if (access_token != null && refresh_token != null)
+        {
+            adapter.setState('api.access_token', access_token, function (err) {
+                if (err) adapter.log.error(err);
+            });
+            adapter.setState('api.refresh_token', refresh_token, function (err) {
+                if (err) adapter.log.error(err);
+            });
         }
     });
 }
@@ -126,8 +156,10 @@ function getHomeID() {
 function main() {
     // The adapters config (in the instance object everything under the attribute "native") is accessible via
     // adapter.config:
-    adapter.log.info('config username: '    + adapter.config.username);
-    adapter.log.info('config password: '    + adapter.config.password);
+    // adapter.log.info('config username: '    + adapter.config.username);
+    // adapter.log.info('config password: '    + adapter.config.password);
 
     getLoginToken();
+
+    adapter.subscribeStates('*');
 }
