@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "mytado",
-        "version": "0.0.1",
+        "version": "0.0.2",
         "news": {
             "0.0.1": {
                 "en": "initial adapter",
@@ -63,7 +63,44 @@
         "test2": 42,
         "mySelect": "auto"
     },
-    "objects": [
-
+    "objects": [],
+    "instanceObjects":[
+        {
+            "_id": "api.access_token",
+            "type": "state",
+            "common": {
+                "role": "text",
+                "name": "Access Token",
+                "type": "string",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "api.refresh_token",
+            "type": "state",
+            "common": {
+                "role": "text",
+                "name": "Refresh Token",
+                "type": "string",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        }
+    ,
+        {
+            "_id": "homeID",
+            "type": "state",
+            "common": {
+                "role": "text",
+                "name": "Home ID",
+                "type": "string",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        }
     ]
 }

@@ -5,6 +5,11 @@
 // you have to require the utils module and call adapter function
 var utils =    require(__dirname + '/lib/utils'); // Get common adapter utils
 
+// Create global variables
+var access_token = null;
+var refresh_token = null;
+var homeID = null;
+
 // you have to call the adapter function and pass a options object
 // name has to be set and has to be equal to adapters folder name and main file name excluding extension
 // adapter will be restarted automatically every time as the configuration changed, e.g system.adapter.mytado.0
@@ -56,67 +61,73 @@ adapter.on('ready', function () {
     main();
 });
 
-function main() {
+function getLoginToken() {
+    var request = require("request");
 
+    var options = { method: 'POST',
+        url: 'https://my.tado.com/oauth/token',
+        qs:
+        { client_id: 'public-api-preview',
+            grant_type: 'password',
+            scope: 'home.user',
+            username: adapter.config.username,
+            password: adapter.config.password,
+            client_secret: '4HJGRffVR8xb3XdEUQpjgZ1VplJi6Xgw' },
+        headers:
+        { 'Postman-Token': 'b57437e9-595f-405e-aac6-e35c0bfc3a95',
+            'Cache-Control': 'no-cache' } };
+
+    request(options, function (error, response, body) {
+        if (error) throw new Error(error);
+
+        var json = JSON.parse(body);
+        access_token = json['access_token'];
+        refresh_token = json['refresh_token'];
+
+        if (access_token != null && refresh_token != null)
+        {
+            adapter.setState('api.access_token', access_token, function (err) {
+                if (err) adapter.log.error(err);
+            });
+            adapter.setState('api.refresh_token', refresh_token, function (err) {
+                if (err) adapter.log.error(err);
+            });
+
+            getHomeID();
+        }
+    });
+}
+
+function getHomeID() {
+    var request = require("request");
+
+    var options = { method: 'GET',
+        url: 'https://my.tado.com/api/v2/me',
+        headers:
+        { 'Postman-Token': 'cfd9a2a2-b526-4f4d-9c5e-b175cfdf350c',
+            'Cache-Control': 'no-cache',
+            Authorization: 'Bearer ' + access_token } };
+
+    request(options, function (error, response, body) {
+        if (error) {
+            throw new Error(error);
+        } else {
+            var json = JSON.parse(body);
+            homeID = json['homes'][0]['id'];
+
+            adapter.setState('homeID', homeID, function (err) {
+                if (err) adapter.log.error(err);
+            });
+        }
+    });
+
+}
+
+function main() {
     // The adapters config (in the instance object everything under the attribute "native") is accessible via
     // adapter.config:
-    adapter.log.info('config test1: '    + adapter.config.test1);
-    adapter.log.info('config test1: '    + adapter.config.test2);
-    adapter.log.info('config mySelect: ' + adapter.config.mySelect);
+    adapter.log.info('config username: '    + adapter.config.username);
+    adapter.log.info('config password: '    + adapter.config.password);
 
-
-    /**
-     *
-     *      For every state in the system there has to be also an object of type state
-     *
-     *      Here a simple mytado for a boolean variable named "testVariable"
-     *
-     *      Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-     *
-     */
-
-    adapter.setObject('testVariable', {
-        type: 'state',
-        common: {
-            name: 'testVariable',
-            type: 'boolean',
-            role: 'indicator'
-        },
-        native: {}
-    });
-
-    // in this mytado all states changes inside the adapters namespace are subscribed
-    adapter.subscribeStates('*');
-
-
-    /**
-     *   setState examples
-     *
-     *   you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-     *
-     */
-
-    // the variable testVariable is set to true as command (ack=false)
-    adapter.setState('testVariable', true);
-
-    // same thing, but the value is flagged "ack"
-    // ack should be always set to true if the value is received from or acknowledged from the target system
-    adapter.setState('testVariable', {val: true, ack: true});
-
-    // same thing, but the state is deleted after 30s (getState will return null afterwards)
-    adapter.setState('testVariable', {val: true, ack: true, expire: 30});
-
-
-
-    // examples for the checkPassword/checkGroup functions
-    adapter.checkPassword('admin', 'iobroker', function (res) {
-        console.log('check user admin pw ioboker: ' + res);
-    });
-
-    adapter.checkGroup('admin', 'admin', function (res) {
-        console.log('check group user admin group admin: ' + res);
-    });
-
-
-
+    getLoginToken();
 }
