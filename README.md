@@ -11,3 +11,4 @@ This is a adapter for full Tado integration in ioBroker.
 
 <div>http://blog.scphillips.com/posts/2017/01/the-tado-api-v2/ for api documentation</div>
 <div>https://forum.iobroker.net/viewtopic.php?t=10542 some ideas</div>
+<div>https://www.getpostman.com for this beautiful tool <3</div>
