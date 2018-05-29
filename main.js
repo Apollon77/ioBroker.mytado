@@ -134,8 +134,7 @@ function getHomeID() {
     var options = { method: 'GET',
         url: 'https://my.tado.com/api/v2/me',
         headers:
-        { 'Postman-Token': 'cfd9a2a2-b526-4f4d-9c5e-b175cfdf350c',
-            'Cache-Control': 'no-cache',
+        {   'Cache-Control': 'no-cache',
             Authorization: 'Bearer ' + access_token } };
 
     request(options, function (error, response, body) {
