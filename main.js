@@ -3,7 +3,7 @@
 'use strict';
 
 // you have to require the utils module and call adapter function
-var utils =    require(__dirname + '/lib/utils'); // Get common adapter utils
+var utils = require(__dirname + '/lib/utils'); // Get common adapter utils
 
 // Create global variables
 var access_token = null;
@@ -65,14 +65,15 @@ function getLoginToken() {
     var request = require("sync-request");
 
     var options = {
-        qs:
-        { client_id: 'public-api-preview',
+        qs: {
+            client_id: 'public-api-preview',
             grant_type: 'password',
             scope: 'home.user',
             username: adapter.config.username,
             password: adapter.config.password,
-            client_secret: '4HJGRffVR8xb3XdEUQpjgZ1VplJi6Xgw' },
-        };
+            client_secret: '4HJGRffVR8xb3XdEUQpjgZ1VplJi6Xgw'
+        },
+    };
 
     var req = request('POST', 'https://my.tado.com/oauth/token', options);
     var body = req.getBody('utf8');
@@ -82,8 +83,7 @@ function getLoginToken() {
     access_token = json['access_token'];
     refresh_token = json['refresh_token'];
 
-    if (access_token != null && refresh_token != null && expires_in_msec != null)
-    {
+    if (access_token != null && refresh_token != null && expires_in_msec != null) {
         setInterval(refreshToken, expires_in_msec);
 
         adapter.setState('api.access_token', access_token, function (err) {
@@ -98,16 +98,18 @@ function getLoginToken() {
 function refreshToken() {
     var request = require("request");
 
-    var options = { method: 'POST',
+    var options = {
+        method: 'POST',
         url: 'https://my.tado.com/oauth/token',
-        qs:
-        { client_id: 'public-api-preview',
+        qs: {
+            client_id: 'public-api-preview',
             grant_type: 'refresh_token',
             scope: 'home.user',
             refresh_token: refresh_token,
-            client_secret: '4HJGRffVR8xb3XdEUQpjgZ1VplJi6Xgw' },
-        headers:
-        { 'Cache-Control': 'no-cache' } };
+            client_secret: '4HJGRffVR8xb3XdEUQpjgZ1VplJi6Xgw'
+        },
+        headers: {'Cache-Control': 'no-cache'}
+    };
 
     request(options, function (error, response, body) {
         if (error) throw new Error(error);
@@ -116,8 +118,7 @@ function refreshToken() {
         access_token = json['access_token'];
         refresh_token = json['refresh_token'];
 
-        if (access_token != null && refresh_token != null)
-        {
+        if (access_token != null && refresh_token != null) {
             adapter.setState('api.access_token', access_token, function (err) {
                 if (err) adapter.log.error(err);
             });
@@ -128,52 +129,46 @@ function refreshToken() {
     });
 }
 
-function getHomeID() {
-    var request = require("request");
+function getHomeIDs() {
+    var request = require("sync-request");
 
-    var options = { method: 'GET',
-        url: 'https://my.tado.com/api/v2/me',
-        headers:
-        {   'Cache-Control': 'no-cache',
-            Authorization: 'Bearer ' + access_token } };
-
-    request(options, function (error, response, body) {
-        if (error) {
-            throw new Error(error);
-        } else {
-            var json = JSON.parse(body);
-
-            homeIDs = json['homes'];
-
-            json['homes'].forEach(function(element)
-            {
-                adapter.setObjectNotExists(element['name'], {
-                    type: 'channel',
-                    role: '',
-                    common: {
-                        name: element['name'] + ' (Home ID ' + element['id'] + ')'
-                    },
-                    native: {}
-                });
-
-                adapter.setObjectNotExists(element['name'] + '.id', {
-                    type: 'state',
-                    common: {
-                        name: 'Home ID',
-                        desc: 'home id for ' + element['name'],
-                        type: 'string',
-                        role: 'text',
-                        read: true,
-                        write: true
-                    },
-                    native: {}
-                });
-
-                adapter.setState(element['name'] + '.id', element['id']);
-            });
+    var options = {
+        headers: {
+            'Cache-Control': 'no-cache',
+            Authorization: 'Bearer ' + access_token
         }
-    });
+    };
 
+    var req = request('GET', 'https://my.tado.com/api/v2/me', options);
+    var json = JSON.parse(req.getBody('utf8'));
+
+    homeIDs = json['homes'];
+
+    json['homes'].forEach(function (element) {
+        adapter.setObjectNotExists(element['name'], {
+            type: 'channel',
+            role: '',
+            common: {
+                name: element['name'] + ' (Home ID ' + element['id'] + ')'
+            },
+            native: {}
+        });
+
+        adapter.setObjectNotExists(element['name'] + '.id', {
+            type: 'state',
+            common: {
+                name: 'Home ID',
+                desc: 'home id for ' + element['name'],
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: true
+            },
+            native: {}
+        });
+
+        adapter.setState(element['name'] + '.id', element['id']);
+    });
 }
 
 function main() {
@@ -183,6 +178,9 @@ function main() {
     // adapter.log.info('config password: '    + adapter.config.password);
 
     getLoginToken();
+    getHomeIDs();
+
+
 
     adapter.subscribeStates('*');
 }
