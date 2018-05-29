@@ -8,7 +8,7 @@ var utils =    require(__dirname + '/lib/utils'); // Get common adapter utils
 // Create global variables
 var access_token = null;
 var refresh_token = null;
-var homeID = null;
+var homeIDs = {};
 
 // you have to call the adapter function and pass a options object
 // name has to be set and has to be equal to adapters folder name and main file name excluding extension
@@ -142,10 +142,34 @@ function getHomeID() {
             throw new Error(error);
         } else {
             var json = JSON.parse(body);
-            homeID = json['homes'][0]['id'];
 
-            adapter.setState('homeID', homeID, function (err) {
-                if (err) adapter.log.error(err);
+            homeIDs = json['homes'];
+
+            json['homes'].forEach(function(element)
+            {
+                adapter.setObjectNotExists(element['name'], {
+                    type: 'channel',
+                    role: '',
+                    common: {
+                        name: element['name'] + ' (Home ID ' + element['id'] + ')'
+                    },
+                    native: {}
+                });
+
+                adapter.setObjectNotExists(element['name'] + '.id', {
+                    type: 'state',
+                    common: {
+                        name: 'Home ID',
+                        desc: 'home id for ' + element['name'],
+                        type: 'string',
+                        role: 'text',
+                        read: true,
+                        write: true
+                    },
+                    native: {}
+                });
+
+                adapter.setState(element['name'] + '.id', element['id']);
             });
         }
     });
