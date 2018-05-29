@@ -62,10 +62,9 @@ adapter.on('ready', function () {
 });
 
 function getLoginToken() {
-    var request = require("request");
+    var request = require("sync-request");
 
-    var options = { method: 'POST',
-        url: 'https://my.tado.com/oauth/token',
+    var options = {
         qs:
         { client_id: 'public-api-preview',
             grant_type: 'password',
@@ -73,30 +72,27 @@ function getLoginToken() {
             username: adapter.config.username,
             password: adapter.config.password,
             client_secret: '4HJGRffVR8xb3XdEUQpjgZ1VplJi6Xgw' },
-        headers:
-        { 'Cache-Control': 'no-cache' } };
+        };
 
-    request(options, function (error, response, body) {
-        if (error) throw new Error(error);
+    var req = request('POST', 'https://my.tado.com/oauth/token', options);
+    var body = req.getBody('utf8');
+    var json = JSON.parse(body);
 
-        var json = JSON.parse(body);
-        access_token = json['access_token'];
-        refresh_token = json['refresh_token'];
-        var expires_in_msec = (parseInt(json['expires_in'], 10) - 5) * 1000;
+    var expires_in_msec = (parseInt(json['expires_in'], 10) - 5) * 1000;
+    access_token = json['access_token'];
+    refresh_token = json['refresh_token'];
 
+    if (access_token != null && refresh_token != null && expires_in_msec != null)
+    {
+        setInterval(refreshToken, expires_in_msec);
 
-        if (access_token != null && refresh_token != null && expires_in_msec != null)
-        {
-            setInterval(refreshToken, expires_in_msec);
-
-            adapter.setState('api.access_token', access_token, function (err) {
-                if (err) adapter.log.error(err);
-            });
-            adapter.setState('api.refresh_token', refresh_token, function (err) {
-                if (err) adapter.log.error(err);
-            });
-        }
-    });
+        adapter.setState('api.access_token', access_token, function (err) {
+            if (err) adapter.log.error(err);
+        });
+        adapter.setState('api.refresh_token', refresh_token, function (err) {
+            if (err) adapter.log.error(err);
+        });
+    }
 }
 
 function refreshToken() {
@@ -177,6 +173,10 @@ function getHomeID() {
             });
         }
     });
+
+}
+
+function getLoginTokenSync(){
 
 }
 
