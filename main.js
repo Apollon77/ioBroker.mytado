@@ -82,9 +82,13 @@ function getLoginToken() {
         var json = JSON.parse(body);
         access_token = json['access_token'];
         refresh_token = json['refresh_token'];
+        var expires_in_msec = (parseInt(json['expires_in'], 10) - 5) * 1000;
 
-        if (access_token != null && refresh_token != null)
+
+        if (access_token != null && refresh_token != null && expires_in_msec != null)
         {
+            setInterval(refreshToken, expires_in_msec);
+
             adapter.setState('api.access_token', access_token, function (err) {
                 if (err) adapter.log.error(err);
             });
