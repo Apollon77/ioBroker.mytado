@@ -176,10 +176,6 @@ function getHomeID() {
 
 }
 
-function getLoginTokenSync(){
-
-}
-
 function main() {
     // The adapters config (in the instance object everything under the attribute "native") is accessible via
     // adapter.config:
