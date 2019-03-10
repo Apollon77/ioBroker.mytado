@@ -1,6 +1,6 @@
 ![Logo](admin/mytado.png)
 # ioBroker.mytado
-
+![Number of Installations](http://iobroker.live/badges/mytado-installed.svg) ![Number of Installations](http://iobroker.live/badges/mytado-stable.svg) 
 This is a adapter for full Tado integration in ioBroker.
 
 ## Used icons (This project uses some icons from other people)
